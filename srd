@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+import subprocess
+import argparse
+import re
+
+#===============================
+# Start of the Display Settings
+#===============================
+
+detect_primary = False
+outputs = []
+advanced_mode = False
+
+#=============================
+# End of the Display Settings
+#=============================
+
+parser = argparse.ArgumentParser(
+  formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+  description="A simpler interface for common xrandr options",
+  epilog="Restore xrandr default settings when invoked without any flags",
+)
+
+init_parser = argparse.ArgumentParser(add_help=False)
+
+init_parser.add_argument(
+  "-f",
+  action="store_true" if not advanced_mode else "store_false",
+  help="Toggle the advanced mode for this time only",
+)
+known_args, remaining_args = init_parser.parse_known_args()
+force_advanced = known_args.f
+
+def err(): raise ValueError
+
+if force_advanced:
+  parser.register("type", "brightness", lambda val: val if re.fullmatch(r"0\.[1-9]|1\.[0-9]|2", val) else err())
+  parser.register("type", "gamma", lambda val: val if re.fullmatch(r"(?:0\.0?[1-9][0-9]?|1\.[0-9][0-9]?|[1-2]),(?:0\.0?[1-9][0-9]?|1\.[0-9][0-9]?|[1-2]),(?:0\.0?[1-9][0-9]?|1\.[0-9][0-9]?|[1-2])|[1-9]", val) else err())
+else:
+  parser.register("type", "brightness", lambda val: val if re.fullmatch(r"[2-9]", val) else err())
+  parser.register("type", "gamma", lambda val: val if re.fullmatch(r"[2-9]", val) else err())
+
+parser.add_argument(
+  "-b",
+  type="brightness",
+  default=1,
+  metavar="<float>" if force_advanced else "<int>",
+  help="Set the brightness value"
+)
+parser.add_argument(
+  "-g",
+  type="gamma",
+  default=1,
+  metavar="<int>|<float>:<float>:<float>" if force_advanced else "<int>",
+  help="Set the same gamma value for all channels, or adjust each one individually",
+)
+
+parser.add_argument(
+  "-f",
+  default=argparse.SUPPRESS,
+  help="Invert the advanced mode value for this run only",
+  metavar='',
+)
+
+args = parser.parse_args(remaining_args)
+
+if not args.b == 1 and not force_advanced:
+  args.b = f"0.{args.b}"
+
+if not args.g == 1:
+  args.g = args.g.translate(str.maketrans(",", ":")) if force_advanced else f"0.{args.g}"
+
+if not outputs:
+  fetch_outputs = subprocess.run(["/usr/bin/xrandr"], text=True, stdout=subprocess.PIPE)
+
+  if not detect_primary:
+    for line in fetch_outputs.stdout.split('\n'):
+      if " connected" in line:
+        outputs.append(f"--output {line.split(' ')[0]} --brightness {args.b} --gamma {args.g}")
+    full_string = f"xrandr {' '.join(outputs)}"
+  else:
+    for line in fetch_outputs.stdout.split("\n"):
+      if "primary" in line:
+        full_string = f"xrandr --output {line.split(' ')[0]} --brightness {args.b} --gamma {args.g}"
+else:
+  full_string = f"xrandr {' '.join([f'--output {output} --brightness {args.b} --gamma {args.g}' for output in outputs])}"
+
+full_cmd = full_string.split(" ")
+try:
+  subprocess.run(full_cmd, check=True)
+except subprocess.CalledProcessError:
+  print("Error: xrandr failed with a non-zero exit code")
