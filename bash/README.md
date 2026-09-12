@@ -5,7 +5,7 @@ I like to work in low-light environments, but even the minimum brightness of my 
 At least for me and my dark dev corner.
 
 Over time, and after many experiments, I've developed a couple of useful scripts to mitigate this.\
-I'd like to share my Python solution to this problem with you. There's also a Bash version for anyone who prefers it.
+I'd like to share my Bash solution to this problem with you.
 
 ## Quick Features Overview
 
@@ -32,7 +32,7 @@ I'd like to share my Python solution to this problem with you. There's also a Ba
  - Fetch only the `srd` directly
 
  ```bash
- wget https://raw.githubusercontent.com/S3np0lia-Terra/srd/refs/heads/main/srd
+ wget https://raw.githubusercontent.com/S3np0lia-Terra/srd/refs/heads/main/srd/bash/srd
  ```
 
 3. Make it executable
@@ -70,14 +70,14 @@ For example, with the full prompt:
 
 On the very top of the script, you'll find the following lines:
 
-```python
+```bash
 # ==============================
 # Start of the Display Settings
 # ==============================
 
-detect_primary = False
-outputs = []
-advanced_mode = False
+DETECT_PRIMARY=0
+OUTPUTS=()
+ADVANCED_MODE=0
 
 #=============================
 # End of the Display Settings
@@ -86,29 +86,29 @@ advanced_mode = False
 
 *What do these options mean?*
 
-### 1. `detect_primary`
+### 1. `DETECT_PRIMARY`
 
-This is a boolean option.
+This is a boolean-like numeric toggle.
 
-When this option is turned off and no displays are specified in the `outputs` list, `srd` will detect every currently connected display (as reported by `xrandr`) and apply the configuration to them.
+When this option is turned off, i.e., `0`, and no displays are specified in the `OUTPUTS` list, `srd` will detect every currently connected display (as reported by `xrandr`) and apply the configuration to them.
 
-However, if you set this option to `True`, `srd` will detect only the primary display and apply the configuration to it.
+However, if you set this option to `1`, `srd` will detect only the primary display and apply the configuration to it.
 
-### 2. `outputs`
+### 2. `OUTPUTS`
 
-This is a list of strings containing the names of the outputs as they appear in `xrandr`.
+This is an indexed array of strings containing the names of the outputs as they appear in `xrandr`.
 
 You can specify them like this:
 
-```python
-outputs = ["DP-1", "HDMI-0"]
+```bash
+OUTPUTS=('DP-1' 'HDMI-0')
 ```
 
-If `outputs` is left empty, then the script will dynamically fetch currently connected displays (according to `xrandr`) and apply the configuration to them.
+If `OUTPUTS` is left empty, then the script will dynamically fetch currently connected displays (according to `xrandr`) and apply the configuration to them.
 
-### 3. `advanced_mode`
+### 3. `ADVANCED_MODE`
 
-This is a boolean option.
+This is a boolean-like numeric toggle.
 
 When this option is turned off (the default), the script allows you to quickly and easily change the required values, while applying additional guardrails.
 
@@ -122,7 +122,7 @@ srd -b 7 -g 8
 
 will set the brightness to `0.7` and the gamma to `0.8`.
 
-When `advanced_mode` is set to `True`, you can tune each gamma channel individually with values ranging from `0.01` to `2`.
+When `ADVANCED_MODE` is set to `1`, you can tune each gamma channel individually with values ranging from `0.01` to `2`.
 
 It also allows you to set the brightness above `1` using `-b`, within a range of `0.1` to `2`.
 
@@ -169,7 +169,7 @@ And this sets the brightness to `0.7` and the RGB gamma values to `1:0.8:0.5`:
 srd -b 7 -g 1,0.8,0.5
 ```
 
-There is also the `-f` flag, which temporarily inverts the `advanced_mode` setting for the current command.
+There is also the `-f` flag, which temporarily inverts the `ADVANCED_MODE` setting for the current command.
 
 For example, this command forces advanced mode, sets the brightness to `0.7` and sets the RGB gamma values to `1:0.25:0.05`:
 
