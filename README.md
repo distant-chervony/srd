@@ -32,7 +32,7 @@ I'd like to share my Python solution to this problem with you. There's also a Ba
  - Fetch only the `srd` directly
 
  ```bash
- wget https://raw.githubusercontent.com/S3np0lia-Terra/srd/refs/heads/main/srd
+ wget https://raw.githubusercontent.com/distant-chervony/srd/refs/heads/main/srd
  ```
 
 3. Make it executable
